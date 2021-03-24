@@ -44,10 +44,10 @@ def main():
         # https://huggingface.co/facebook/blenderbot_small-90M/tree/main
         # vào folder BlenderbotSmall
 
-        # Bbot_PATH = 'facebook/blenderbot-400M-distill'
+        Bbot_PATH = 'facebook/blenderbot-400M-distill'
         # Bbot_PATH = 'facebook/blenderbot_small-90M'
         # Bbot_PATH = './Blenderbot'
-        Bbot_PATH = './BlenderbotSmall'
+        # Bbot_PATH = './BlenderbotSmall'
 
         BbotModel, BbotTokenizer = load_BlenderbotSmall(Bbot_PATH)
 
@@ -70,7 +70,8 @@ def main():
         # Tải thêm file từ
         # https://huggingface.co/google/mobilebert-uncased/tree/main
         # vào folder MobileBERT
-        MBERT_PATH = './MobileBERT'
+        # MBERT_PATH = './MobileBERT'
+        MBERT_PATH = 'google/mobilebert-uncased'
         MBERTmodel, MBERTtokenizer = load_MobileBERT(MBERT_PATH)
         fb = FitBert(model=MBERTmodel, tokenizer=MBERTtokenizer)
 
