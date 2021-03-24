@@ -18,11 +18,11 @@ def load_Blenderbot(Bbot_PATH):
     BbotTokenizer = BlenderbotTokenizer.from_pretrained(Bbot_PATH)
     return BbotModel, BbotTokenizer
 
-@st.cache(allow_output_mutation=True, max_entries=1)
-def load_BlenderbotSmall(Bbot_PATH):
-    BbotModel = BlenderbotSmallForConditionalGeneration.from_pretrained(Bbot_PATH)
-    BbotTokenizer = BlenderbotSmallTokenizer.from_pretrained(Bbot_PATH)
-    return BbotModel, BbotTokenizer
+# @st.cache(allow_output_mutation=True, max_entries=1)
+# def load_BlenderbotSmall(Bbot_PATH):
+#     BbotModel = BlenderbotSmallForConditionalGeneration.from_pretrained(Bbot_PATH)
+#     BbotTokenizer = BlenderbotSmallTokenizer.from_pretrained(Bbot_PATH)
+#     return BbotModel, BbotTokenizer
 
 @st.cache(allow_output_mutation=True, max_entries=1)
 def load_MobileBERT(MBERT_PATH):
