@@ -44,8 +44,8 @@ def main():
         # https://huggingface.co/facebook/blenderbot_small-90M/tree/main
         # vào folder BlenderbotSmall
 
-        Bbot_PATH = 'facebook/blenderbot-400M-distill'
-        # Bbot_PATH = 'facebook/blenderbot_small-90M'
+        # Bbot_PATH = 'facebook/blenderbot-400M-distill'
+        Bbot_PATH = 'facebook/blenderbot_small-90M'
         # Bbot_PATH = './Blenderbot'
         # Bbot_PATH = './BlenderbotSmall'
 
