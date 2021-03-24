@@ -5,6 +5,8 @@ from fitbert import FitBert
 from transformers import (
     BlenderbotSmallTokenizer, 
     BlenderbotSmallForConditionalGeneration,
+    BlenderbotTokenizer,
+    BlenderbotForConditionalGeneration,
     MobileBertForMaskedLM,
     MobileBertTokenizer,
     pipeline
@@ -28,6 +30,13 @@ def load_MobileBERT(MBERT_PATH):
     MBERTtokenizer = MobileBertTokenizer.from_pretrained(MBERT_PATH)
     return MBERTmodel, MBERTtokenizer
 
+def chat_log(user_log, bot_log, chatlog_holder):
+    df = pd.DataFrame({'You': user_log, 'Bot': bot_log})
+    with chatlog_holder:
+        st.table(df.tail(5))
+    with st.beta_expander("Full chat history"):
+        st.table(df)
+
 def main():
     session_state = SessionState.get(user_chat_log=[], bot_reply_log=[])
 
@@ -43,13 +52,15 @@ def main():
         # Tải thêm file từ
         # https://huggingface.co/facebook/blenderbot_small-90M/tree/main
         # vào folder BlenderbotSmall
-
-        # Bbot_PATH = 'facebook/blenderbot-400M-distill'
-        Bbot_PATH = 'facebook/blenderbot_small-90M'
         # Bbot_PATH = './Blenderbot'
         # Bbot_PATH = './BlenderbotSmall'
 
-        BbotModel, BbotTokenizer = load_BlenderbotSmall(Bbot_PATH)
+        # Chạy trên server streamlit thì thay path
+        Bbot_PATH = 'facebook/blenderbot-400M-distill'
+        # Bbot_PATH = 'facebook/blenderbot_small-90M'
+        
+        # BbotModel, BbotTokenizer = load_BlenderbotSmall(Bbot_PATH)
+        BbotModel, BbotTokenizer = load_Blenderbot(Bbot_PATH)
 
         text = st.text_input("You:")
         if len(text) != 0:
@@ -58,11 +69,7 @@ def main():
             bot_reply = BbotTokenizer.batch_decode(reply_ids, skip_special_tokens=True)[0]
             session_state.user_chat_log.append(text)
             session_state.bot_reply_log.append(bot_reply)
-            df = pd.DataFrame({'You': session_state.user_chat_log, 'Bot': session_state.bot_reply_log})
-            with chatlog_holder:
-                st.table(df.tail(5))
-            with st.beta_expander("Full chat history"):
-                st.table(df)
+            chat_log(session_state.user_chat_log, session_state.bot_reply_log, chatlog_holder)
 
 
     elif mode == 'English_solver':
@@ -71,7 +78,10 @@ def main():
         # https://huggingface.co/google/mobilebert-uncased/tree/main
         # vào folder MobileBERT
         # MBERT_PATH = './MobileBERT'
+
+        # Chạy trên server streamlit thì thay path
         MBERT_PATH = 'google/mobilebert-uncased'
+
         MBERTmodel, MBERTtokenizer = load_MobileBERT(MBERT_PATH)
         fb = FitBert(model=MBERTmodel, tokenizer=MBERTtokenizer)
 
@@ -87,33 +97,28 @@ def main():
         if num_choices == 0:
             # Fill in the blank
             question = st.text_input(label='Sentence:')
-            question = question.replace('_', '[MASK]')
-
-            mlm = pipeline('fill-mask', model=MBERTmodel, tokenizer=MBERTtokenizer)
-            result = mlm(question)[0]['token_str'].replace(' ','')
-
-            session_state.user_chat_log.append(question.replace('[MASK]', '_'))
-            session_state.bot_reply_log.append(result)
-            df = pd.DataFrame({'You': session_state.user_chat_log, 'Bot': session_state.bot_reply_log})
-            with chatlog_holder:
-                st.table(df.tail(5))
-            with st.beta_expander("Full chat history"):
-                st.table(df)
+            if len(question) != 0:
+                question = question.replace('_', '[MASK]')
+    
+                mlm = pipeline('fill-mask', model=MBERTmodel, tokenizer=MBERTtokenizer)
+                result = mlm(question)[0]['token_str'].replace(' ','')
+    
+                session_state.user_chat_log.append(question.replace('[MASK]', '_'))
+                session_state.bot_reply_log.append(result)
+                chat_log(session_state.user_chat_log, session_state.bot_reply_log, chatlog_holder)
 
         elif num_choices == 1:
             # Grammatical conjugation
             question = st.text_input(label='Sentence:')
             choices=[st.text_input(label='Word needs to conjugate')]
-            question = question.replace('_', '***mask***')
-            bot_choice = fb.fitb(question, options=choices)
+            if st.button("Conjugate") and len(question) != 0 and choices:
+                question = question.replace('_', '***mask***')
+                bot_choice = fb.fitb(question, options=choices)
 
-            session_state.user_chat_log.append(question.replace('***mask***', '_'))
-            session_state.bot_reply_log.append(bot_choice)
-            df = pd.DataFrame({'You': session_state.user_chat_log, 'Bot': session_state.bot_reply_log})
-            with chatlog_holder:
-                st.table(df.tail(5))
-            with st.beta_expander("Full chat history"):
-                st.table(df)
+                session_state.user_chat_log.append(question.replace('***mask***', '_'))
+                session_state.bot_reply_log.append(bot_choice)
+                chat_log(session_state.user_chat_log, session_state.bot_reply_log, chatlog_holder)
+            
             
         else:
             # Sentence completion
@@ -129,11 +134,7 @@ def main():
 
                 session_state.user_chat_log.append(question.replace('***mask***', '_'))
                 session_state.bot_reply_log.append(bot_choice)
-                df = pd.DataFrame({'You': session_state.user_chat_log, 'Bot': session_state.bot_reply_log})
-                with chatlog_holder:
-                    st.table(df.tail(5))
-                with st.beta_expander("Full chat history"):
-                    st.table(df)
+                chat_log(session_state.user_chat_log, session_state.bot_reply_log, chatlog_holder)
                 
 
 if __name__ == "__main__":
