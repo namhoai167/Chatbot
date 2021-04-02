@@ -40,7 +40,7 @@ def chat_log(user_log, bot_log, chatlog_holder):
 def main():
     session_state = SessionState.get(user_chat_log=[], bot_reply_log=[])
 
-    mode = st.sidebar.radio("Mode: ", options=['Chat', 'English_solver'])
+    mode = st.sidebar.radio("Mode: ", options=['Chat', 'TOEIC_part5', 'TOEIC_part6'])
 
     # mode = st.radio("Mode: ", options=['Chat', 'TOEIC_part5'])
 
@@ -72,7 +72,7 @@ def main():
             chat_log(session_state.user_chat_log, session_state.bot_reply_log, chatlog_holder)
 
 
-    elif mode == 'English_solver':
+    elif mode == 'TOEIC_part5':
         # Load MobileBERT chạy local
         # Tải thêm file từ
         # https://huggingface.co/google/mobilebert-uncased/tree/main
@@ -88,22 +88,21 @@ def main():
         num_choices = st.sidebar.slider(label="Number of choices", min_value=0, max_value=4)
 
         st.sidebar.markdown("""
-        0: Fill in the blank
-
-        1: Grammatical conjugation
-
+        0: Fill in the blank \\
+        1: Grammatical conjugation \\
         2-4: Sentence completion""")
 
         if num_choices == 0:
             # Fill in the blank
             question = st.text_input(label='Sentence:')
             if len(question) != 0:
+                session_state.user_chat_log.append(question)
+
                 question = question.replace('_', '[MASK]')
     
                 mlm = pipeline('fill-mask', model=MBERTmodel, tokenizer=MBERTtokenizer)
                 result = mlm(question)[0]['token_str'].replace(' ','')
     
-                session_state.user_chat_log.append(question.replace('[MASK]', '_'))
                 session_state.bot_reply_log.append(result)
                 chat_log(session_state.user_chat_log, session_state.bot_reply_log, chatlog_holder)
 
@@ -112,10 +111,11 @@ def main():
             question = st.text_input(label='Sentence:')
             choices=[st.text_input(label='Word needs to conjugate')]
             if st.button("Conjugate") and len(question) != 0 and choices:
+                session_state.user_chat_log.append(question)
+
                 question = question.replace('_', '***mask***')
                 bot_choice = fb.fitb(question, options=choices)
-
-                session_state.user_chat_log.append(question.replace('***mask***', '_'))
+    
                 session_state.bot_reply_log.append(bot_choice)
                 chat_log(session_state.user_chat_log, session_state.bot_reply_log, chatlog_holder)
             
@@ -129,12 +129,56 @@ def main():
                 choices.append(st.text_input(label=labels[i]))
             
             if st.button("Solve") and len(question) != 0 and len(choices[0]) != 0 and len(choices[1]) != 0:
+                session_state.user_chat_log.append(question)
+
                 question = question.replace('_', '***mask***')
                 bot_choice = fb.rank(question, options=choices)[0]
 
-                session_state.user_chat_log.append(question.replace('***mask***', '_'))
                 session_state.bot_reply_log.append(bot_choice)
                 chat_log(session_state.user_chat_log, session_state.bot_reply_log, chatlog_holder)
+    
+    elif mode == 'TOEIC_part6':
+        # Load MobileBERT chạy local
+        # MBERT_PATH = './MobileBERT'
+
+        # Chạy trên server streamlit thì thay path
+        MBERT_PATH = 'google/mobilebert-uncased'
+
+        MBERTmodel, MBERTtokenizer = load_MobileBERT(MBERT_PATH)
+        fb = FitBert(model=MBERTmodel, tokenizer=MBERTtokenizer)
+        question = []
+        labels=['Question 1.', 'Question 2.', 'Question 3.', 'Question 4.']
+        paragraph = st.text_input(label='Paragraph:')
+        for i in range(4):
+            question.append(st.text_input(label=labels[i]))
+            question[i] = question[i].split('/')
+
+        st.write(question)
+
+        bot_choices = []
+        
+        if st.button("Solve") and len(paragraph) != 0:
+            session_state.user_chat_log.append(paragraph)
+            paragraph = paragraph.replace('_', '***mask***')
+            splited_paragraph = paragraph.split()
+            mask_indices = [i for i, item in enumerate(splited_paragraph) if '***mask***' in item]
+            
+
+            if len(paragraph) < len(mask_indices):
+                length = len(paragraph)
+            else:
+                length = len(mask_indices)
+
+            for i in range(length):
+                mask_idx = mask_indices.pop(0)
+                one_masked_paragraph = ' '.join([word for idx, word in enumerate(splited_paragraph) if idx not in mask_indices])
+                st.write(one_masked_paragraph)
+                bot_choices.append(fb.rank(sent=one_masked_paragraph, options=question[i])[0])
+                splited_paragraph[mask_idx] = bot_choices[i]
+
+            session_state.bot_reply_log.append(bot_choices)
+            chat_log(session_state.user_chat_log, session_state.bot_reply_log, chatlog_holder)
+
                 
 
 if __name__ == "__main__":
