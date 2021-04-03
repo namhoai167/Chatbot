@@ -7,8 +7,8 @@ from transformers import (
     BlenderbotSmallForConditionalGeneration,
     BlenderbotTokenizer,
     BlenderbotForConditionalGeneration,
-    MobileBertForMaskedLM,
-    MobileBertTokenizer,
+    ElectraForMaskedLM,
+    ElectraTokenizer,
     pipeline
 )
 
