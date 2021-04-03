@@ -24,11 +24,17 @@ def load_Blenderbot(Bbot_PATH):
 #     BbotTokenizer = BlenderbotSmallTokenizer.from_pretrained(Bbot_PATH)
 #     return BbotModel, BbotTokenizer
 
+# @st.cache(allow_output_mutation=True, max_entries=1)
+# def load_MobileBERT(MBERT_PATH):
+#     MBERTmodel = MobileBertForMaskedLM.from_pretrained(MBERT_PATH)
+#     MBERTtokenizer = MobileBertTokenizer.from_pretrained(MBERT_PATH)
+#     return MBERTmodel, MBERTtokenizer
+
 @st.cache(allow_output_mutation=True, max_entries=1)
-def load_MobileBERT(MBERT_PATH):
-    MBERTmodel = MobileBertForMaskedLM.from_pretrained(MBERT_PATH)
-    MBERTtokenizer = MobileBertTokenizer.from_pretrained(MBERT_PATH)
-    return MBERTmodel, MBERTtokenizer
+def load_ELECTRAsmall(ELETRA_PATH):
+    ELECTRAmodel = ElectraForMaskedLM.from_pretrained(ELECTRA_PATH)
+    ELECTRAtokenizer = ElectraTokenizer.from_pretrained(ELECTRA_PATH)
+    return ELECTRAmodel, ELECTRAtokenizer
 
 def chat_log(user_log, bot_log, chatlog_holder):
     df = pd.DataFrame({'You': user_log, 'Bot': bot_log})
@@ -52,8 +58,8 @@ def main():
         # Tải thêm file từ
         # https://huggingface.co/facebook/blenderbot_small-90M/tree/main
         # vào folder BlenderbotSmall
-        # Bbot_PATH = './Blenderbot'
-        # Bbot_PATH = './BlenderbotSmall'
+        # Bbot_PATH = './blenderbot-400M-distill'
+        # Bbot_PATH = './blenderbot_small-90M'
 
         # Chạy trên server streamlit thì thay path
         Bbot_PATH = 'facebook/blenderbot-400M-distill'
@@ -73,17 +79,17 @@ def main():
 
 
     elif mode == 'TOEIC_part5':
-        # Load MobileBERT chạy local
+        # Load ELECTRA small chạy local
         # Tải thêm file từ
-        # https://huggingface.co/google/mobilebert-uncased/tree/main
-        # vào folder MobileBERT
-        # MBERT_PATH = './MobileBERT'
+        # https://huggingface.co/google/electra-small-generator/tree/main
+        # vào folder electra-small-generator
+        # ELECTRA_PATH = './electra-small-generator'
 
         # Chạy trên server streamlit thì thay path
-        MBERT_PATH = 'google/mobilebert-uncased'
+        ELECTRA_PATH = 'google/electra-small-generator'
 
-        MBERTmodel, MBERTtokenizer = load_MobileBERT(MBERT_PATH)
-        fb = FitBert(model=MBERTmodel, tokenizer=MBERTtokenizer)
+        ELECTRAmodel, ELECTRAtokenizer = load_ELECTRAsmall(ELECTRA_PATH)
+        fb = FitBert(model=ELECTRAmodel, tokenizer=ELECTRAtokenizer)
 
         num_choices = st.sidebar.slider(label="Number of choices", min_value=0, max_value=4)
 
@@ -100,7 +106,7 @@ def main():
 
                 question = question.replace('_', '[MASK]')
     
-                mlm = pipeline('fill-mask', model=MBERTmodel, tokenizer=MBERTtokenizer)
+                mlm = pipeline('fill-mask', model=ELECTRAmodel, tokenizer=ELECTRAtokenizer)
                 result = mlm(question)[0]['token_str'].replace(' ','')
     
                 session_state.bot_reply_log.append(result)
@@ -138,14 +144,14 @@ def main():
                 chat_log(session_state.user_chat_log, session_state.bot_reply_log, chatlog_holder)
     
     elif mode == 'TOEIC_part6':
-        # Load MobileBERT chạy local
-        # MBERT_PATH = './MobileBERT'
-
+        # Load ELECTRA small chạy local
+        # ELECTRA_PATH = './electra-small-generator'
+        
         # Chạy trên server streamlit thì thay path
-        MBERT_PATH = 'google/mobilebert-uncased'
+        ELECTRA_PATH = 'google/electra-small-generator'
 
-        MBERTmodel, MBERTtokenizer = load_MobileBERT(MBERT_PATH)
-        fb = FitBert(model=MBERTmodel, tokenizer=MBERTtokenizer)
+        ELECTRAmodel, ELECTRAtokenizer = load_ELECTRAsmall(ELECTRA_PATH)
+        fb = FitBert(model=ELECTRAmodel, tokenizer=ELECTRAtokenizer)
         question = []
         labels=['Question 1.', 'Question 2.', 'Question 3.', 'Question 4.']
         paragraph = st.text_input(label='Paragraph:')
