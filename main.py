@@ -31,7 +31,7 @@ def load_Blenderbot(Bbot_PATH):
 #     return MBERTmodel, MBERTtokenizer
 
 @st.cache(allow_output_mutation=True, max_entries=1)
-def load_ELECTRAsmall(ELETRA_PATH):
+def load_ELECTRAsmall(ELECTRA_PATH):
     ELECTRAmodel = ElectraForMaskedLM.from_pretrained(ELECTRA_PATH)
     ELECTRAtokenizer = ElectraTokenizer.from_pretrained(ELECTRA_PATH)
     return ELECTRAmodel, ELECTRAtokenizer
